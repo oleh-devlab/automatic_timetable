@@ -1,6 +1,10 @@
+#ifndef SCHEDULE_CONTROL_H
+#define SCHEDULE_CONTROL_H
+
 #include <vector>
 
-#include "structs.h"
+#include "task.h"
+#include "time_blocks.h"
 #include "scheduling_algorithm.h"
 
 class Schedule {
@@ -12,3 +16,6 @@ public:
 
     std::vector<FinalTask> get_schedule();
 };
+
+const void printSchedule(std::vector<FinalTask> schedule);
+#endif // SCHEDULE_CONTROL_H
