@@ -1,4 +1,4 @@
 #include "task.h"
 #include "time_blocks.h"
 
-FinalTask::FinalTask(const Task& src_task, TimeInterval interval, std::string algo_notes) : task_id(src_task.id), interval(interval), algo_notes(algo_notes) {}
+FinalBlock::FinalBlock(const Task& src_task, TimeInterval interval, std::string algo_notes, bool is_task) : task_id(src_task.id), interval(interval), algo_notes(algo_notes), is_task(is_task) {}
