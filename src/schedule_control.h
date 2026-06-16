@@ -7,15 +7,5 @@
 #include "time_blocks.h"
 #include "scheduling_algorithm.h"
 
-// class Schedule {
-// private:
-//     std::vector<TimeBlock> time_blocks;
-//     std::vector<Task> tasks;
-// public:
-//     Schedule(std::vector<TimeBlock> time_blocks, std::vector<Task> tasks);
-
-//     std::vector<FinalBlock> get_schedule();
-// };
-
 const void printSchedule(std::vector<FinalBlock> schedule);
 #endif // SCHEDULE_CONTROL_H

@@ -1,10 +1,9 @@
 ## First simple version.
 - Minimal interactivity.
-- Not implemented yet.
 - Designed to demonstrate ideas and build a base for heavy algorithms.
 
 ```
-1. Sorts (using a stable sort or specific conditions) the array of tasks in ascending order by: deadlines (to the nearest day—i.e., disregarding hours and minutes), and priorities.
+1. Sorts the array of tasks in ascending order by: deadlines (to the nearest day—i.e., disregarding hours and minutes), and priorities.
 2. Converts the sorted tasks into an array of final tasks, taking the Pomodoro into account (the algorithm will insert breaks later based on an analysis of the work block duration and the number of past blocks)
 2.1. Initializes the “cursor” with the current system time (or a user-specified time).
 2.2. Reads the array of time blocks, searches among them for the block closest to the current cursor position from the future (or the present, but not the past).

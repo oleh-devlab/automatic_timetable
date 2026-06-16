@@ -9,13 +9,15 @@ TimeInterval TimeBlock::get_interval(PointInTime cursor_time) {
             return apply_cursor_date_to_interval(cursor_time);
         } else {
             // Повторення кожного тижня в один єдиний день
-            std::chrono::weekday cursor_wd = std::chrono::floor<std::chrono::days>(cursor_time);
+            auto zone = std::chrono::current_zone();
+            auto local_cursor = std::chrono::zoned_time{zone, cursor_time}.get_local_time();
+            auto cursor_days = std::chrono::floor<std::chrono::days>(local_cursor);
+            std::chrono::weekday wd{cursor_days};
             
-            if (cursor_wd == day_of_week) {
+            if (wd == day_of_week) {
                 return apply_cursor_date_to_interval(cursor_time);
             } else {
-                TimeInterval final_interval;
-                return final_interval;
+                return TimeInterval{};
             }
         }
     } else {
@@ -38,21 +40,30 @@ TimeBlock::TimeBlock(bool is_repeatable_flag, bool is_every_day_flag, TimeInterv
 
 TimeInterval TimeBlock::apply_cursor_date_to_interval(PointInTime cursor_time) const
 {
-    auto date = std::chrono::floor<std::chrono::days>(cursor_time);
-    auto temp_internal_interval_date = std::chrono::floor<std::chrono::days>(interval.start);
-
-    auto time_of_day_start = interval.start - temp_internal_interval_date;
-    auto time_of_day_end = interval.end - temp_internal_interval_date;
-
-    // Відкидання секунд, мілісекунд і так далі
-    time_of_day_start = std::chrono::floor<std::chrono::minutes>(time_of_day_start);
-    time_of_day_end = std::chrono::floor<std::chrono::minutes>(time_of_day_end);
+    auto zone = std::chrono::current_zone();
     
-    auto final_start = date + time_of_day_start;
-    auto final_end = date + time_of_day_end;
+    auto local_cursor = std::chrono::zoned_time{zone, cursor_time}.get_local_time();
+    auto cursor_days  = std::chrono::floor<std::chrono::days>(local_cursor);
+    
+    auto local_start = std::chrono::zoned_time{zone, interval.start}.get_local_time();
+    auto start_days  = std::chrono::floor<std::chrono::days>(local_start);
+    
+    auto days_diff = cursor_days - start_days;
+    
+    auto new_local_start = local_start + days_diff;
+    auto new_local_end   = std::chrono::zoned_time{zone, interval.end}.get_local_time() + days_diff;
 
-    TimeInterval final_interval{final_start, final_end};
-    return final_interval;
+    auto to_sys = [zone](auto local_time) -> PointInTime {
+        try {
+            return std::chrono::floor<std::chrono::minutes>(
+                std::chrono::zoned_time{zone, local_time, std::chrono::choose::earliest}.get_sys_time());
+        } catch (const std::chrono::nonexistent_local_time&) {
+            return std::chrono::floor<std::chrono::minutes>(
+                std::chrono::zoned_time{zone, local_time + std::chrono::hours{1}, std::chrono::choose::earliest}.get_sys_time());
+        }
+    };
+
+    return TimeInterval{to_sys(new_local_start), to_sys(new_local_end)};
 }
 
 
