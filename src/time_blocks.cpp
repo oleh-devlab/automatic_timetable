@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-TimeInterval TimeBlock::get_interval(PointInTime cursor_time) {
+TimeInterval TimeBlock::get_interval(PointInTime cursor_time) const {
     if (is_repeatable) {
         if (is_every_day) {
             // Повторення щодня

@@ -13,7 +13,7 @@ struct TimeInterval {
 
 struct TimeBlock {
 public:
-    TimeInterval get_interval(PointInTime cursor_time); // Returns the time during which work is prohibited
+    TimeInterval get_interval(PointInTime cursor_time) const; // Returns the time during which work is prohibited
 
     bool get_repeatable() const { return is_repeatable; }
     bool get_every_day() const { return is_every_day; }

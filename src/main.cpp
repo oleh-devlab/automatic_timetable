@@ -1,6 +1,4 @@
 #include <iostream>
-#include <chrono>
-#include <limits>
 #include <vector>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -8,220 +6,288 @@
 #endif
 
 #include "schedule_control.h"
-#include "time_blocks.h"
+#include "interactive_ui.h"
+#include "console_io.h"
+#include "time_utils.h"
+#include "persistence.h"
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-namespace {
-
-// Builds a time_point for the given calendar date + time (UTC).
-// TODO: (std::chrono::current_zone)
-PointInTime make_time_point(int year, int month, int day, int hours, int minutes)
-{
-    std::chrono::year_month_day ymd{
-        std::chrono::year{year},
-        std::chrono::month{static_cast<unsigned>(month)},
-        std::chrono::day{static_cast<unsigned>(day)}
-    };
-    return std::chrono::sys_days{ymd}
-         + std::chrono::hours(hours)
-         + std::chrono::minutes(minutes);
-}
-
-// Builds a time_point for today (UTC) at h:m — used for repeatable blocks.
-// TODO:  (std::chrono::current_zone)
-PointInTime make_time_point_today(int hours, int minutes)
-{
-    auto today = std::chrono::floor<std::chrono::days>(
-        std::chrono::system_clock::now());
-    return today
-         + std::chrono::hours(hours)
-         + std::chrono::minutes(minutes);
-}
-
-// Formats a PointInTime as "HH:MM" (UTC).
-std::string fmt_hhmm(PointInTime tp)
-{
-    auto dp = std::chrono::floor<std::chrono::days>(tp);
-    auto hh = std::chrono::floor<std::chrono::hours>(tp - dp);
-    auto mm = std::chrono::floor<std::chrono::minutes>(tp - dp - hh);
-    char buf[8];
-    std::snprintf(buf, sizeof(buf), "%02d:%02d",
-                  static_cast<int>(hh.count()),
-                  static_cast<int>(mm.count()));
-    return buf;
-}
-
-// Reads "HH:MM" from stdin; loops until valid.
-std::pair<int, int> read_hhmm(const char* prompt)
-{
-    for (;;) {
-        std::cout << prompt;
-        int  h = -1, m = -1;
-        char sep = 0;
-        std::cin >> h >> sep >> m;
-        if (std::cin && sep == ':' && h >= 0 && h <= 23 && m >= 0 && m <= 59)
-            return {h, m};
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "  Неправильний формат — введіть HH:MM (наприклад, 09:30).\n";
-    }
-}
-
-// Reads "DD.MM.YYYY" from stdin; loops until valid calendar date.
-std::tuple<int, int, int> read_date(const char* prompt)
-{
-    for (;;) {
-        std::cout << prompt;
-        int  d = -1, mon = -1, y = -1;
-        char s1 = 0, s2 = 0;
-        std::cin >> d >> s1 >> mon >> s2 >> y;
-        if (std::cin && s1 == '.' && s2 == '.') {
-            std::chrono::year_month_day ymd{
-                std::chrono::year{y},
-                std::chrono::month{static_cast<unsigned>(mon)},
-                std::chrono::day{static_cast<unsigned>(d)}
-            };
-            if (ymd.ok()) return {y, mon, d};
-        }
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "  Неправильний формат — введіть ДД.ММ.РРРР"
-                     " (наприклад, 25.12.2025).\n";
-    }
-}
-
-// Reads y/n answer from stdin.
-bool read_yesno(const char* prompt)
-{
-    for (;;) {
-        char c = 0;
-        std::cout << prompt;
-        std::cin >> c;
-        if (c == 'y' || c == 'Y') return true;
-        if (c == 'n' || c == 'N') return false;
-        std::cout << "  Введіть y або n.\n";
-    }
-}
-
-// Reads a weekday number 0–6 (Sun–Sat) from stdin.
-std::chrono::weekday read_weekday()
-{
-    for (;;) {
-        std::cout << "  День тижня"
-                     " (0=Нд, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб): ";
-        unsigned d = 7;
-        std::cin >> d;
-        if (std::cin && d <= 6) return std::chrono::weekday{d};
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "  Введіть число від 0 до 6.\n";
-    }
-}
-
-void flush_line()
-{
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
-
-} // anonymous namespace
+#define SAVE_COMPLETED_TASKS 1
 
 // ─── main ────────────────────────────────────────────────────────────────────
 
-int main() {
+int main(int argc, char* argv[]) {
 #if defined(_WIN32) || defined(_WIN64)
     SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 #endif
-
     std::vector<TimeBlock> time_blocks;
+    std::vector<Task> tasks;
+    uint64_t next_task_id = 1;
+
+    bool loaded = load_data(time_blocks, tasks, next_task_id);
+
+    bool get_schedule_flag = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--get_schedule") {
+            get_schedule_flag = true;
+        }
+    }
+
+    if (get_schedule_flag) {
+        auto schedule = get_schedule(time_blocks, tasks);
+        write_schedule_tsv(std::cout, schedule);
+        return 0;
+    }
+
+    if (loaded) {
+        std::cout << "Дані успішно завантажено (TimeBlocks: " << time_blocks.size() 
+                  << ", Tasks: " << tasks.size() << ").\n";
+    }
 
     int choice = 0;
     do {
-        std::cout << "1. Write TimeBlock" << std::endl;
-        std::cout << "2. Read TimeBlocks" << std::endl;
-        std::cout << "0. Exit" << std::endl;
-        std::cin >> choice;
-        flush_line();
+        std::cout << "\n";
+        std::cout << "──────────── ГОЛОВНЕ МЕНЮ ────────────\n";
+        std::cout << "1. Дії з TimeBlock\n";
+        std::cout << "2. Дії з Task\n";
+        std::cout << "3. Згенерувати розклад\n";
+        std::cout << "4. Зберегти дані\n";
+        std::cout << "0. Вихід\n";
+        choice = read_int("Вибір: ");
 
         switch (choice) {
             case 1: {
-                // Write time block
-                const bool is_repeatable = read_yesno("Повторюваний? (y/n): ");
+                int tb_choice = 0;
+                do {
+                    std::cout << "\n";
+                    std::cout << "── Меню TimeBlock ──\n";
+                    std::cout << "1. Додати TimeBlock\n";
+                    std::cout << "2. Показати TimeBlocks\n";
+                    std::cout << "3. Редагувати / Видалити TimeBlock\n";
+                    std::cout << "0. Повернутися в головне меню\n";
+                    tb_choice = read_int("Вибір: ");
 
-                bool is_every_day = false;
-                std::chrono::weekday day_of_week{0};
+                    switch (tb_choice) {
+                        case 1: {
+                            auto maybe_tb = read_timeblock_from_input();
+                            if (maybe_tb.has_value()) {
+                                try {
+                                    time_blocks.push_back(std::move(*maybe_tb));
+                                    std::cout << "  TimeBlock #" << time_blocks.size() << " додано.\n";
+                                } catch (const std::exception& ex) {
+                                    std::cout << "  Помилка конструктора: " << ex.what() << '\n';
+                                }
+                            }
+                            break;
+                        }
+                        case 2: {
+                            print_timeblocks(time_blocks);
+                            break;
+                        }
+                        case 3: {
+                            if (time_blocks.empty()) {
+                                std::cout << "  Список TimeBlocks порожній.\n";
+                                break;
+                            }
 
-                if (is_repeatable) {
-                    is_every_day = read_yesno("Кожного дня? (y/n): ");
-                    if (!is_every_day)
-                        day_of_week = read_weekday();
-                }
+                            print_timeblocks(time_blocks);
 
-                TimeInterval interval{};
+                            int tb_idx = read_int("Номер TimeBlock (або 0 для скасування): ");
+                            if (tb_idx <= 0 || tb_idx > static_cast<int>(time_blocks.size())) {
+                                if (tb_idx != 0)
+                                    std::cout << "  Неправильний номер.\n";
+                                break;
+                            }
+                            --tb_idx;
 
-                if (!is_repeatable) {
-                    auto [year, mon, day] = read_date("Дата (ДД.ММ.РРРР): ");
-                    auto [sh, sm] = read_hhmm("Початок (HH:MM): ");
-                    auto [eh, em] = read_hhmm("Кінець  (HH:MM): ");
+                            std::cout << "  1. Перестворити (ввести всі поля заново)\n";
+                            std::cout << "  2. Видалити\n";
+                            std::cout << "  0. Скасувати\n";
+                            int tb_action = read_int("Дія: ");
 
-                    if (sh * 60 + sm >= eh * 60 + em) {
-                        std::cout << "  Неправильно введені дані:"
-                                     " час початку має бути раніше часу кінця.\n";
-                        break;
+                            if (tb_action == 2) {
+                                time_blocks.erase(time_blocks.begin() + tb_idx);
+                                std::cout << "  TimeBlock видалено.\n";
+                            } else if (tb_action == 1) {
+                                auto maybe_tb = read_timeblock_from_input();
+                                if (maybe_tb.has_value()) {
+                                    try {
+                                        time_blocks[tb_idx] = std::move(*maybe_tb);
+                                        std::cout << "  TimeBlock #" << (tb_idx + 1) << " оновлено.\n";
+                                    } catch (const std::exception& ex) {
+                                        std::cout << "  Помилка: " << ex.what() << '\n';
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case 0:
+                            break;
+                        default:
+                            std::cout << "Неправильний вибір.\n";
+                            break;
                     }
-
-                    interval = { make_time_point(year, mon, day, sh, sm),
-                                 make_time_point(year, mon, day, eh, em) };
-                } else {
-                    auto [sh, sm] = read_hhmm("Початок (HH:MM): ");
-                    auto [eh, em] = read_hhmm("Кінець  (HH:MM): ");
-
-                    if (sh * 60 + sm >= eh * 60 + em) {
-                        std::cout << "  Неправильно введені дані:"
-                                     " час початку має бути раніше часу кінця.\n";
-                        break;
-                    }
-
-                    interval = { make_time_point_today(sh, sm),
-                                 make_time_point_today(eh, em) };
-                }
-
-                try {
-                    time_blocks.push_back(
-                        TimeBlock{is_repeatable, is_every_day, interval, day_of_week});
-                    std::cout << "  TimeBlock #" << time_blocks.size() << " додано.\n";
-                } catch (const std::exception& ex) {
-                    std::cout << "  Помилка конструктора: " << ex.what() << '\n';
-                }
-
+                } while (tb_choice != 0);
                 break;
             }
+
             case 2: {
-                // Read time blocks
-                if (time_blocks.empty()) {
-                    std::cout << "  Список порожній.\n";
+                int t_choice = 0;
+                do {
+                    std::cout << "\n";
+                    std::cout << "── Меню Task ──\n";
+                    std::cout << "1. Додати Task\n";
+                    std::cout << "2. Показати Tasks\n";
+                    std::cout << "3. Редагувати / Видалити Task\n";
+                    std::cout << "4. Відмітити прогрес (витрачений час)\n";
+                    std::cout << "5. Детальна інформація про Task (з описом)\n";
+                    std::cout << "0. Повернутися в головне меню\n";
+                    t_choice = read_int("Вибір: ");
+
+                    switch (t_choice) {
+                        case 1: {
+                            Task task = read_task_from_input(next_task_id++);
+                            std::cout << "  Task #" << task.id << " \"" << task.name << "\" додано.\n";
+                            tasks.push_back(std::move(task));
+                            break;
+                        }
+                        case 2: {
+                            print_tasks_summary(tasks);
+                            break;
+                        }
+                        case 3: {
+                            if (tasks.empty()) {
+                                std::cout << "  Список завдань порожній.\n";
+                                break;
+                            }
+
+                            print_tasks_short(tasks);
+
+                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
+                                if (t_idx != 0)
+                                    std::cout << "  Неправильний номер.\n";
+                                break;
+                            }
+                            --t_idx;
+
+                            bool deleted = edit_task_interactive(tasks[t_idx]);
+                            if (deleted) {
+                                tasks.erase(tasks.begin() + t_idx);
+                                std::cout << "  Task видалено.\n";
+                            }
+                            break;
+                        }
+                        case 4: {
+                            if (tasks.empty()) {
+                                std::cout << "  Список завдань порожній.\n";
+                                break;
+                            }
+
+                            print_tasks_with_remaining_time(tasks);
+
+                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
+                                if (t_idx != 0)
+                                    std::cout << "  Неправильний номер.\n";
+                                break;
+                            }
+                            --t_idx;
+
+                            int default_dur = static_cast<int>(tasks[t_idx].work_session_duration.count());
+                            std::string prompt = "Витрачено хвилин (за замовчуванням " + std::to_string(default_dur) + "): ";
+                            int spent = read_int_default(prompt.c_str(), default_dur);
+
+                            tasks[t_idx].total_duration -= std::chrono::minutes{spent};
+                            
+                            if (tasks[t_idx].total_duration.count() <= 0) {
+                                std::cout << "  Віднято " << spent << " хв.\n";
+                                std::cout << "  Завдання повністю виконано!\n";
+#if SAVE_COMPLETED_TASKS
+                                append_completed_task(tasks[t_idx]);
+#endif
+                                tasks.erase(tasks.begin() + t_idx);
+                            } else {
+                                std::cout << "  Віднято " << spent << " хв. Залишилось: " << tasks[t_idx].total_duration.count() << " хв.\n";
+                            }
+                            break;
+                        }
+                        case 5: {
+                            if (tasks.empty()) {
+                                std::cout << "  Список завдань порожній.\n";
+                                break;
+                            }
+
+                            print_tasks_short(tasks);
+
+                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
+                                if (t_idx != 0)
+                                    std::cout << "  Неправильний номер.\n";
+                                break;
+                            }
+                            --t_idx;
+
+                            const auto& t = tasks[t_idx];
+                            std::cout << "\n  ── Детальна інформація ──\n";
+                            std::cout << "  Назва: " << t.name << "\n";
+                            std::cout << "  Опис:  " << (t.description.empty() ? "(немає опису)" : t.description) << "\n";
+                            std::cout << "  Дедлайн: ";
+                            if (t.deadline.has_value()) {
+                                std::cout << fmt_datetime(*t.deadline) << "\n";
+                            } else {
+                                std::cout << "немає\n";
+                            }
+                            std::cout << "  Пріоритет: " << t.priority << "\n";
+                            std::cout << "  Тривалість: " << t.total_duration.count() << " хв\n";
+                            std::cout << "  Сесія: " << t.work_session_duration.count() << " хв\n";
+                            std::cout << "  Перерва: " << t.break_duration.count() << " хв\n";
+                            std::cout << "  Скорочення: " << (t.min_session_duration.has_value() ? "дозволено" : "заборонено") << "\n";
+                            if (t.min_session_duration.has_value()) {
+                                std::cout << "  Мін. сесія: " << t.min_session_duration->count() << " хв\n";
+                            }
+                            std::cout << "  ─────────────────────────\n";
+                            break;
+                        }
+                        case 0:
+                            break;
+                        default:
+                            std::cout << "Неправильний вибір.\n";
+                            break;
+                    }
+                } while (t_choice != 0);
+                break;
+            }
+
+            case 3: {
+                if (tasks.empty()) {
+                    std::cout << "  Спочатку додайте хоча б одне завдання.\n";
                     break;
                 }
-                
-                auto now = std::chrono::system_clock::now();
-                for (std::size_t i = 0; i < time_blocks.size(); ++i) {
-                    TimeInterval iv = time_blocks[i].get_interval(now);
-                    std::cout << "  #" << (i + 1)
-                              << "  [" << fmt_hhmm(iv.start)
-                              << " — " << fmt_hhmm(iv.end) << "]\n";
+
+                std::cout << "  Генерація розкладу...\n";
+                auto result = get_schedule(time_blocks, tasks);
+                printSchedule(result);
+                break;
+            }
+
+            case 4: {
+                if (save_data(time_blocks, tasks)) {
+                    std::cout << "  Дані успішно збережено.\n";
                 }
                 break;
             }
-            case 0: {
+
+            case 0:
+                std::cout << "  Збереження даних перед виходом...\n";
+                if (save_data(time_blocks, tasks)) {
+                    std::cout << "  Дані успішно збережено.\n";
+                }
                 break;
-            }
-            default: {
-                std::cout << "Wrong choice. Try again." << std::endl;
+            default:
+                std::cout << "Неправильний вибір. Спробуйте ще раз.\n";
                 break;
-            }
         }
     } while (choice != 0);
-    // TODO: timepoint in my timezone from interface
-
     return 0;
 }
