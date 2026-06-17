@@ -11,6 +11,11 @@
 
 // --- Save / Load Data ------------------------------------------------
 
+// Sets custom paths for the data files. If a parameter is empty, the default is kept.
+void set_file_paths(const std::string& tasks_file,
+                    const std::string& time_blocks_file,
+                    const std::string& completed_tasks_file);
+
 // Saves tasks and time blocks to TSV files (tasks.tsv, time_blocks.tsv).
 // Returns true if both saved successfully.
 bool save_data(const std::vector<TimeBlock>& tbs,

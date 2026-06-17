@@ -7,9 +7,9 @@
 
 namespace {
 
-const char* TASKS_FILE = "tasks.tsv";
-const char* TIME_BLOCKS_FILE = "time_blocks.tsv";
-const char* COMPLETED_TASKS_FILE = "completed_tasks.tsv";
+std::string tasks_file_path = "tasks.tsv";
+std::string time_blocks_file_path = "time_blocks.tsv";
+std::string completed_tasks_file_path = "completed_tasks.tsv";
 
 const char* TASKS_HEADER = "id\tname\tdescription\thas_deadline\tdeadline\tpriority\ttotal_dur\tsession_dur\tbreak_dur\thas_min_session\tmin_session\n";
 const char* TIME_BLOCKS_HEADER = "is_repeatable\tis_every_day\tstart_time\tend_time\tday_of_week\n";
@@ -129,13 +129,21 @@ bool parse_time_block_tsv(const std::vector<std::string>& cols, TimeBlock& tb) {
 
 // --- Public API --------------------------------------------------------------
 
+void set_file_paths(const std::string& tasks_file,
+                    const std::string& time_blocks_file,
+                    const std::string& completed_tasks_file) {
+    if (!tasks_file.empty()) tasks_file_path = tasks_file;
+    if (!time_blocks_file.empty()) time_blocks_file_path = time_blocks_file;
+    if (!completed_tasks_file.empty()) completed_tasks_file_path = completed_tasks_file;
+}
+
 bool save_data(const std::vector<TimeBlock>& tbs, const std::vector<Task>& tasks) {
     bool ok = true;
 
     // Save Tasks
-    std::ofstream out_tasks(TASKS_FILE);
+    std::ofstream out_tasks(tasks_file_path);
     if (!out_tasks) {
-        std::cerr << "  Error: could not open " << TASKS_FILE << " for writing.\n";
+        std::cerr << "  Error: could not open " << tasks_file_path << " for writing.\n";
         ok = false;
     } else {
         out_tasks << TASKS_HEADER;
@@ -145,9 +153,9 @@ bool save_data(const std::vector<TimeBlock>& tbs, const std::vector<Task>& tasks
     }
 
     // Save TimeBlocks
-    std::ofstream out_blocks(TIME_BLOCKS_FILE);
+    std::ofstream out_blocks(time_blocks_file_path);
     if (!out_blocks) {
-        std::cerr << "  Error: could not open " << TIME_BLOCKS_FILE << " for writing.\n";
+        std::cerr << "  Error: could not open " << time_blocks_file_path << " for writing.\n";
         ok = false;
     } else {
         out_blocks << TIME_BLOCKS_HEADER;
@@ -166,7 +174,7 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
     bool ok = true;
 
     // Load Tasks
-    std::ifstream in_tasks(TASKS_FILE);
+    std::ifstream in_tasks(tasks_file_path);
     if (in_tasks) {
         std::string line;
         std::getline(in_tasks, line); // Skip header
@@ -187,7 +195,7 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
     }
     
     // Load TimeBlocks
-    std::ifstream in_blocks(TIME_BLOCKS_FILE);
+    std::ifstream in_blocks(time_blocks_file_path);
     if (in_blocks) {
         std::string line;
         std::getline(in_blocks, line); // Skip header
@@ -208,9 +216,9 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
 }
 
 void append_completed_task(const Task& t) {
-    std::ofstream out(COMPLETED_TASKS_FILE, std::ios::app);
+    std::ofstream out(completed_tasks_file_path, std::ios::app);
     if (!out) {
-        std::cerr << "  Error: could not open " << COMPLETED_TASKS_FILE << " for writing.\n";
+        std::cerr << "  Error: could not open " << completed_tasks_file_path << " for writing.\n";
         return;
     }
     

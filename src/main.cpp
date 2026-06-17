@@ -24,14 +24,27 @@ int main(int argc, char* argv[]) {
     std::vector<Task> tasks;
     uint64_t next_task_id = 1;
 
-    bool loaded = load_data(time_blocks, tasks, next_task_id);
-
+    std::string tasks_file = "";
+    std::string time_blocks_file = "";
+    std::string completed_tasks_file = "";
     bool get_schedule_flag = false;
+
     for (int i = 1; i < argc; ++i) {
-        if (std::string(argv[i]) == "--get_schedule") {
+        std::string arg = argv[i];
+        if (arg == "--get_schedule") {
             get_schedule_flag = true;
+        } else if (arg == "--tasks_file" && i + 1 < argc) {
+            tasks_file = argv[++i];
+        } else if (arg == "--time_blocks_file" && i + 1 < argc) {
+            time_blocks_file = argv[++i];
+        } else if (arg == "--completed_tasks_file" && i + 1 < argc) {
+            completed_tasks_file = argv[++i];
         }
     }
+
+    set_file_paths(tasks_file, time_blocks_file, completed_tasks_file);
+
+    bool loaded = load_data(time_blocks, tasks, next_task_id);
 
     if (get_schedule_flag) {
         auto schedule = get_schedule(time_blocks, tasks);
