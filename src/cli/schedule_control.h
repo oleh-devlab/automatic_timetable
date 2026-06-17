@@ -1,0 +1,11 @@
+#ifndef SCHEDULE_CONTROL_H
+#define SCHEDULE_CONTROL_H
+
+#include <vector>
+
+#include "../core/task.h"
+#include "../core/time_blocks.h"
+#include "../core/scheduling_algorithm.h"
+
+const void printSchedule(std::vector<FinalBlock> schedule);
+#endif // SCHEDULE_CONTROL_H
