@@ -1,6 +1,6 @@
 # automatic_timetable
 
-Status: We are currently developing a minimal interface for using the algorithm
+Status: We are currently considering using this project as an API. We are also thinking about improving the algorithm.
 
 # Description
 

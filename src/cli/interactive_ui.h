@@ -1,8 +1,8 @@
 #ifndef INTERACTIVE_UI_H
 #define INTERACTIVE_UI_H
 
-#include "time_blocks.h"
-#include "task.h"
+#include "../core/time_blocks.h"
+#include "../core/task.h"
 #include <optional>
 #include <cstdint>
 #include <vector>

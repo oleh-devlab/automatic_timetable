@@ -1,8 +1,8 @@
 #ifndef PERSISTENCE_H
 #define PERSISTENCE_H
 
-#include "time_blocks.h"
-#include "task.h"
+#include "../core/time_blocks.h"
+#include "../core/task.h"
 
 #include <vector>
 #include <string>

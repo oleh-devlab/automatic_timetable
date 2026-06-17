@@ -4,7 +4,7 @@
 #include <chrono>
 #include <string>
 
-#include "time_blocks.h"
+#include "../core/time_blocks.h"
 
 PointInTime make_time_point(int year, int month, int day, int hours, int minutes);
 PointInTime make_time_point_today(int days_offset, int hours, int minutes);

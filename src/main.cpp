@@ -5,11 +5,11 @@
 #include <windows.h>
 #endif
 
-#include "schedule_control.h"
-#include "interactive_ui.h"
-#include "console_io.h"
-#include "time_utils.h"
-#include "persistence.h"
+#include "cli/schedule_control.h"
+#include "cli/interactive_ui.h"
+#include "cli/console_io.h"
+#include "utils/time_utils.h"
+#include "io/persistence.h"
 
 #define SAVE_COMPLETED_TASKS 1
 

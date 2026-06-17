@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "task.h"
-#include "time_blocks.h"
-#include "scheduling_algorithm.h"
+#include "../core/task.h"
+#include "../core/time_blocks.h"
+#include "../core/scheduling_algorithm.h"
 
 const void printSchedule(std::vector<FinalBlock> schedule);
 #endif // SCHEDULE_CONTROL_H

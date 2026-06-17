@@ -18,21 +18,21 @@ endif()
 add_executable(app
     src/main.cpp
 
-    src/schedule_control.cpp
-    src/time_blocks.cpp
-    src/scheduling_algorithm.cpp
-    src/task.cpp
-    src/time_utils.cpp
-    src/console_io.cpp
-    src/interactive_ui.cpp
-    src/persistence.cpp
+    src/cli/schedule_control.cpp
+    src/core/time_blocks.cpp
+    src/core/scheduling_algorithm.cpp
+    src/core/task.cpp
+    src/utils/time_utils.cpp
+    src/cli/console_io.cpp
+    src/cli/interactive_ui.cpp
+    src/io/persistence.cpp
 
-    src/schedule_control.h
-    src/time_blocks.h
-    src/scheduling_algorithm.h
-    src/task.h
-    src/time_utils.h
-    src/console_io.h
-    src/interactive_ui.h
-    src/persistence.h
+    src/cli/schedule_control.h
+    src/core/time_blocks.h
+    src/core/scheduling_algorithm.h
+    src/core/task.h
+    src/utils/time_utils.h
+    src/cli/console_io.h
+    src/cli/interactive_ui.h
+    src/io/persistence.h
 )
