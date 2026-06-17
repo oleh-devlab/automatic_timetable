@@ -226,7 +226,7 @@ std::vector<FinalBlock> get_schedule(std::vector<TimeBlock> time_blocks, std::ve
                                 task,
                                 TimeInterval{cursor, session_end},
                                 prog.next_session, prog.total_sessions,
-                                "Скорочено сесію через дедлайн");
+                                "Session shortened due to deadline");
 
                             prog.remaining -= shrunk;
                             prog.next_session++;
@@ -243,7 +243,7 @@ std::vector<FinalBlock> get_schedule(std::vector<TimeBlock> time_blocks, std::ve
                             {
                                 auto brk_end = cursor + task.break_duration;
                                 schedule.emplace_back(
-                                    TimeInterval{cursor, brk_end}, "Перерва");
+                                    TimeInterval{cursor, brk_end}, "Break");
                                 cursor = brk_end;
                             }
                             continue; // try next session of same task
@@ -255,7 +255,7 @@ std::vector<FinalBlock> get_schedule(std::vector<TimeBlock> time_blocks, std::ve
                         task,
                         TimeInterval{cursor, cursor},
                         prog.next_session, prog.total_sessions,
-                        "Неможливо вмістити - дедлайн перевищено");
+                        "Cannot fit - deadline exceeded");
 
                     prog.next_session = prog.total_sessions + 1;
                     --active_count;
@@ -284,7 +284,7 @@ std::vector<FinalBlock> get_schedule(std::vector<TimeBlock> time_blocks, std::ve
                     if (break_dur <= remaining_gap) {
                         auto brk_end = cursor + break_dur;
                         schedule.emplace_back(
-                            TimeInterval{cursor, brk_end}, "Перерва");
+                            TimeInterval{cursor, brk_end}, "Break");
                         cursor = brk_end;
 
                     } else if (block_idx < merged.size()) {
@@ -296,7 +296,7 @@ std::vector<FinalBlock> get_schedule(std::vector<TimeBlock> time_blocks, std::ve
                         } else if (remaining_gap > 0min) {
                             schedule.emplace_back(
                                 TimeInterval{cursor, free_end},
-                                "Скорочена перерва (до зайнятого блоку)");
+                                "Shortened break (until occupied block)");
                             cursor = free_end;
                         }
                     }

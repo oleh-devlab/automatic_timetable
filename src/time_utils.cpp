@@ -57,7 +57,7 @@ std::string fmt_datetime(PointInTime tp) {
 const char* weekday_name(std::chrono::weekday wd)
 {
     static const char* names[] = {
-        "Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
     return names[wd.c_encoding()];
 }

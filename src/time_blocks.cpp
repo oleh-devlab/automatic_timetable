@@ -5,10 +5,10 @@
 TimeInterval TimeBlock::get_interval(PointInTime cursor_time) const {
     if (is_repeatable) {
         if (is_every_day) {
-            // Повторення щодня
+            // Repeat daily
             return apply_cursor_date_to_interval(cursor_time);
         } else {
-            // Повторення кожного тижня в один єдиний день
+            // Repeat weekly on a single day
             auto zone = std::chrono::current_zone();
             auto local_cursor = std::chrono::zoned_time{zone, cursor_time}.get_local_time();
             auto cursor_days = std::chrono::floor<std::chrono::days>(local_cursor);
@@ -21,7 +21,7 @@ TimeInterval TimeBlock::get_interval(PointInTime cursor_time) const {
             }
         }
     } else {
-        // "Одноразовий" інтервал
+        // "One-time" interval
         return interval;
     }
 }

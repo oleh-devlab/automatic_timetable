@@ -21,7 +21,7 @@ std::pair<int, int> read_hhmm(const char* prompt)
             return {h, m};
         }
         flush_line();
-        std::cout << "  Неправильний формат — введіть HH:MM (наприклад, 09:30).\n";
+        std::cout << "  Invalid format — enter HH:MM (e.g., 09:30).\n";
     }
 }
 
@@ -44,8 +44,8 @@ std::tuple<int, int, int> read_date(const char* prompt)
             }
         }
         flush_line();
-        std::cout << "  Неправильний формат — введіть ДД.ММ.РРРР"
-                     " (наприклад, 25.12.2025).\n";
+        std::cout << "  Invalid format — enter DD.MM.YYYY"
+                     " (e.g., 25.12.2025).\n";
     }
 }
 
@@ -57,15 +57,15 @@ bool read_yesno(const char* prompt)
         std::cin >> c;
         if (c == 'y' || c == 'Y') { flush_line(); return true; }
         if (c == 'n' || c == 'N') { flush_line(); return false; }
-        std::cout << "  Введіть y або n.\n";
+        std::cout << "  Enter y or n.\n";
     }
 }
 
 std::chrono::weekday read_weekday()
 {
     for (;;) {
-        std::cout << "  День тижня"
-                     " (0=Нд, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб): ";
+        std::cout << "  Day of the week"
+                     " (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat): ";
         unsigned d = 7;
         std::cin >> d;
         if (std::cin && d <= 6) {
@@ -73,7 +73,7 @@ std::chrono::weekday read_weekday()
             return std::chrono::weekday{d};
         }
         flush_line();
-        std::cout << "  Введіть число від 0 до 6.\n";
+        std::cout << "  Enter a number from 0 to 6.\n";
     }
 }
 
@@ -88,7 +88,7 @@ int read_int(const char* prompt)
             return val;
         }
         flush_line();
-        std::cout << "  Введіть невід'ємне ціле число.\n";
+        std::cout << "  Enter a non-negative integer.\n";
     }
 }
 
@@ -118,7 +118,7 @@ int read_int_default(const char* prompt, int default_val)
             }
         } catch (...) {
         }
-        std::cout << "  Введіть невід'ємне ціле число або просто натисніть Enter.\n";
+        std::cout << "  Enter a non-negative integer or just press Enter.\n";
     }
 }
 

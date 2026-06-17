@@ -40,32 +40,32 @@ int main(int argc, char* argv[]) {
     }
 
     if (loaded) {
-        std::cout << "Дані успішно завантажено (TimeBlocks: " << time_blocks.size() 
+        std::cout << "Data loaded successfully (TimeBlocks: " << time_blocks.size() 
                   << ", Tasks: " << tasks.size() << ").\n";
     }
 
     int choice = 0;
     do {
         std::cout << "\n";
-        std::cout << "──────────── ГОЛОВНЕ МЕНЮ ────────────\n";
-        std::cout << "1. Дії з TimeBlock\n";
-        std::cout << "2. Дії з Task\n";
-        std::cout << "3. Згенерувати розклад\n";
-        std::cout << "4. Зберегти дані\n";
-        std::cout << "0. Вихід\n";
-        choice = read_int("Вибір: ");
+        std::cout << "──────────── MAIN MENU ────────────\n";
+        std::cout << "1. Manage TimeBlocks\n";
+        std::cout << "2. Manage Tasks\n";
+        std::cout << "3. Generate Schedule\n";
+        std::cout << "4. Save Data\n";
+        std::cout << "0. Exit\n";
+        choice = read_int("Choice: ");
 
         switch (choice) {
             case 1: {
                 int tb_choice = 0;
                 do {
                     std::cout << "\n";
-                    std::cout << "── Меню TimeBlock ──\n";
-                    std::cout << "1. Додати TimeBlock\n";
-                    std::cout << "2. Показати TimeBlocks\n";
-                    std::cout << "3. Редагувати / Видалити TimeBlock\n";
-                    std::cout << "0. Повернутися в головне меню\n";
-                    tb_choice = read_int("Вибір: ");
+                    std::cout << "── TimeBlock Menu ──\n";
+                    std::cout << "1. Add TimeBlock\n";
+                    std::cout << "2. View TimeBlocks\n";
+                    std::cout << "3. Edit / Delete TimeBlock\n";
+                    std::cout << "0. Return to Main Menu\n";
+                    tb_choice = read_int("Choice: ");
 
                     switch (tb_choice) {
                         case 1: {
@@ -73,9 +73,9 @@ int main(int argc, char* argv[]) {
                             if (maybe_tb.has_value()) {
                                 try {
                                     time_blocks.push_back(std::move(*maybe_tb));
-                                    std::cout << "  TimeBlock #" << time_blocks.size() << " додано.\n";
+                                    std::cout << "  TimeBlock #" << time_blocks.size() << " added.\n";
                                 } catch (const std::exception& ex) {
-                                    std::cout << "  Помилка конструктора: " << ex.what() << '\n';
+                                    std::cout << "  Constructor error: " << ex.what() << '\n';
                                 }
                             }
                             break;
@@ -86,36 +86,36 @@ int main(int argc, char* argv[]) {
                         }
                         case 3: {
                             if (time_blocks.empty()) {
-                                std::cout << "  Список TimeBlocks порожній.\n";
+                                std::cout << "  TimeBlock list is empty.\n";
                                 break;
                             }
 
                             print_timeblocks(time_blocks);
 
-                            int tb_idx = read_int("Номер TimeBlock (або 0 для скасування): ");
+                            int tb_idx = read_int("TimeBlock number (or 0 to cancel): ");
                             if (tb_idx <= 0 || tb_idx > static_cast<int>(time_blocks.size())) {
                                 if (tb_idx != 0)
-                                    std::cout << "  Неправильний номер.\n";
+                                    std::cout << "  Invalid number.\n";
                                 break;
                             }
                             --tb_idx;
 
-                            std::cout << "  1. Перестворити (ввести всі поля заново)\n";
-                            std::cout << "  2. Видалити\n";
-                            std::cout << "  0. Скасувати\n";
-                            int tb_action = read_int("Дія: ");
+                            std::cout << "  1. Recreate (enter all fields again)\n";
+                            std::cout << "  2. Delete\n";
+                            std::cout << "  0. Cancel\n";
+                            int tb_action = read_int("Action: ");
 
                             if (tb_action == 2) {
                                 time_blocks.erase(time_blocks.begin() + tb_idx);
-                                std::cout << "  TimeBlock видалено.\n";
+                                std::cout << "  TimeBlock deleted.\n";
                             } else if (tb_action == 1) {
                                 auto maybe_tb = read_timeblock_from_input();
                                 if (maybe_tb.has_value()) {
                                     try {
                                         time_blocks[tb_idx] = std::move(*maybe_tb);
-                                        std::cout << "  TimeBlock #" << (tb_idx + 1) << " оновлено.\n";
+                                        std::cout << "  TimeBlock #" << (tb_idx + 1) << " updated.\n";
                                     } catch (const std::exception& ex) {
-                                        std::cout << "  Помилка: " << ex.what() << '\n';
+                                        std::cout << "  Error: " << ex.what() << '\n';
                                     }
                                 }
                             }
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
                         case 0:
                             break;
                         default:
-                            std::cout << "Неправильний вибір.\n";
+                            std::cout << "Invalid choice.\n";
                             break;
                     }
                 } while (tb_choice != 0);
@@ -135,19 +135,19 @@ int main(int argc, char* argv[]) {
                 int t_choice = 0;
                 do {
                     std::cout << "\n";
-                    std::cout << "── Меню Task ──\n";
-                    std::cout << "1. Додати Task\n";
-                    std::cout << "2. Показати Tasks\n";
-                    std::cout << "3. Редагувати / Видалити Task\n";
-                    std::cout << "4. Відмітити прогрес (витрачений час)\n";
-                    std::cout << "5. Детальна інформація про Task (з описом)\n";
-                    std::cout << "0. Повернутися в головне меню\n";
-                    t_choice = read_int("Вибір: ");
+                    std::cout << "── Task Menu ──\n";
+                    std::cout << "1. Add Task\n";
+                    std::cout << "2. View Tasks\n";
+                    std::cout << "3. Edit / Delete Task\n";
+                    std::cout << "4. Mark progress (time spent)\n";
+                    std::cout << "5. Task details (with description)\n";
+                    std::cout << "0. Return to Main Menu\n";
+                    t_choice = read_int("Choice: ");
 
                     switch (t_choice) {
                         case 1: {
                             Task task = read_task_from_input(next_task_id++);
-                            std::cout << "  Task #" << task.id << " \"" << task.name << "\" додано.\n";
+                            std::cout << "  Task #" << task.id << " \"" << task.name << "\" added.\n";
                             tasks.push_back(std::move(task));
                             break;
                         }
@@ -157,16 +157,16 @@ int main(int argc, char* argv[]) {
                         }
                         case 3: {
                             if (tasks.empty()) {
-                                std::cout << "  Список завдань порожній.\n";
+                                std::cout << "  Task list is empty.\n";
                                 break;
                             }
 
                             print_tasks_short(tasks);
 
-                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            int t_idx = read_int("Task number (or 0 to cancel): ");
                             if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
                                 if (t_idx != 0)
-                                    std::cout << "  Неправильний номер.\n";
+                                    std::cout << "  Invalid number.\n";
                                 break;
                             }
                             --t_idx;
@@ -174,77 +174,77 @@ int main(int argc, char* argv[]) {
                             bool deleted = edit_task_interactive(tasks[t_idx]);
                             if (deleted) {
                                 tasks.erase(tasks.begin() + t_idx);
-                                std::cout << "  Task видалено.\n";
+                                std::cout << "  Task deleted.\n";
                             }
                             break;
                         }
                         case 4: {
                             if (tasks.empty()) {
-                                std::cout << "  Список завдань порожній.\n";
+                                std::cout << "  Task list is empty.\n";
                                 break;
                             }
 
                             print_tasks_with_remaining_time(tasks);
 
-                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            int t_idx = read_int("Task number (or 0 to cancel): ");
                             if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
                                 if (t_idx != 0)
-                                    std::cout << "  Неправильний номер.\n";
+                                    std::cout << "  Invalid number.\n";
                                 break;
                             }
                             --t_idx;
 
                             int default_dur = static_cast<int>(tasks[t_idx].work_session_duration.count());
-                            std::string prompt = "Витрачено хвилин (за замовчуванням " + std::to_string(default_dur) + "): ";
+                            std::string prompt = "Minutes spent (default " + std::to_string(default_dur) + "): ";
                             int spent = read_int_default(prompt.c_str(), default_dur);
 
                             tasks[t_idx].total_duration -= std::chrono::minutes{spent};
                             
                             if (tasks[t_idx].total_duration.count() <= 0) {
-                                std::cout << "  Віднято " << spent << " хв.\n";
-                                std::cout << "  Завдання повністю виконано!\n";
+                                std::cout << "  Subtracted " << spent << " min.\n";
+                                std::cout << "  Task fully completed!\n";
 #if SAVE_COMPLETED_TASKS
                                 append_completed_task(tasks[t_idx]);
 #endif
                                 tasks.erase(tasks.begin() + t_idx);
                             } else {
-                                std::cout << "  Віднято " << spent << " хв. Залишилось: " << tasks[t_idx].total_duration.count() << " хв.\n";
+                                std::cout << "  Subtracted " << spent << " min. Remaining: " << tasks[t_idx].total_duration.count() << " min.\n";
                             }
                             break;
                         }
                         case 5: {
                             if (tasks.empty()) {
-                                std::cout << "  Список завдань порожній.\n";
+                                std::cout << "  Task list is empty.\n";
                                 break;
                             }
 
                             print_tasks_short(tasks);
 
-                            int t_idx = read_int("Номер Task (або 0 для скасування): ");
+                            int t_idx = read_int("Task number (or 0 to cancel): ");
                             if (t_idx <= 0 || t_idx > static_cast<int>(tasks.size())) {
                                 if (t_idx != 0)
-                                    std::cout << "  Неправильний номер.\n";
+                                    std::cout << "  Invalid number.\n";
                                 break;
                             }
                             --t_idx;
 
                             const auto& t = tasks[t_idx];
-                            std::cout << "\n  ── Детальна інформація ──\n";
-                            std::cout << "  Назва: " << t.name << "\n";
-                            std::cout << "  Опис:  " << (t.description.empty() ? "(немає опису)" : t.description) << "\n";
-                            std::cout << "  Дедлайн: ";
+                            std::cout << "\n  ── Detailed Information ──\n";
+                            std::cout << "  Name: " << t.name << "\n";
+                            std::cout << "  Description: " << (t.description.empty() ? "(no description)" : t.description) << "\n";
+                            std::cout << "  Deadline: ";
                             if (t.deadline.has_value()) {
                                 std::cout << fmt_datetime(*t.deadline) << "\n";
                             } else {
-                                std::cout << "немає\n";
+                                std::cout << "none\n";
                             }
-                            std::cout << "  Пріоритет: " << t.priority << "\n";
-                            std::cout << "  Тривалість: " << t.total_duration.count() << " хв\n";
-                            std::cout << "  Сесія: " << t.work_session_duration.count() << " хв\n";
-                            std::cout << "  Перерва: " << t.break_duration.count() << " хв\n";
-                            std::cout << "  Скорочення: " << (t.min_session_duration.has_value() ? "дозволено" : "заборонено") << "\n";
+                            std::cout << "  Priority: " << t.priority << "\n";
+                            std::cout << "  Duration: " << t.total_duration.count() << " min\n";
+                            std::cout << "  Session: " << t.work_session_duration.count() << " min\n";
+                            std::cout << "  Break: " << t.break_duration.count() << " min\n";
+                            std::cout << "  Shortening: " << (t.min_session_duration.has_value() ? "allowed" : "forbidden") << "\n";
                             if (t.min_session_duration.has_value()) {
-                                std::cout << "  Мін. сесія: " << t.min_session_duration->count() << " хв\n";
+                                std::cout << "  Min session: " << t.min_session_duration->count() << " min\n";
                             }
                             std::cout << "  ─────────────────────────\n";
                             break;
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
                         case 0:
                             break;
                         default:
-                            std::cout << "Неправильний вибір.\n";
+                            std::cout << "Invalid choice.\n";
                             break;
                     }
                 } while (t_choice != 0);
@@ -261,11 +261,11 @@ int main(int argc, char* argv[]) {
 
             case 3: {
                 if (tasks.empty()) {
-                    std::cout << "  Спочатку додайте хоча б одне завдання.\n";
+                    std::cout << "  Please add at least one task first.\n";
                     break;
                 }
 
-                std::cout << "  Генерація розкладу...\n";
+                std::cout << "  Generating schedule...\n";
                 auto result = get_schedule(time_blocks, tasks);
                 printSchedule(result);
                 break;
@@ -273,19 +273,19 @@ int main(int argc, char* argv[]) {
 
             case 4: {
                 if (save_data(time_blocks, tasks)) {
-                    std::cout << "  Дані успішно збережено.\n";
+                    std::cout << "  Data saved successfully.\n";
                 }
                 break;
             }
 
             case 0:
-                std::cout << "  Збереження даних перед виходом...\n";
+                std::cout << "  Saving data before exiting...\n";
                 if (save_data(time_blocks, tasks)) {
-                    std::cout << "  Дані успішно збережено.\n";
+                    std::cout << "  Data saved successfully.\n";
                 }
                 break;
             default:
-                std::cout << "Неправильний вибір. Спробуйте ще раз.\n";
+                std::cout << "Invalid choice. Спробуйте ще раз.\n";
                 break;
         }
     } while (choice != 0);

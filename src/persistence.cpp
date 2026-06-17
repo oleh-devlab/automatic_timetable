@@ -135,7 +135,7 @@ bool save_data(const std::vector<TimeBlock>& tbs, const std::vector<Task>& tasks
     // Save Tasks
     std::ofstream out_tasks(TASKS_FILE);
     if (!out_tasks) {
-        std::cerr << "  Помилка: не вдалося відкрити " << TASKS_FILE << " для запису.\n";
+        std::cerr << "  Error: could not open " << TASKS_FILE << " for writing.\n";
         ok = false;
     } else {
         out_tasks << TASKS_HEADER;
@@ -147,7 +147,7 @@ bool save_data(const std::vector<TimeBlock>& tbs, const std::vector<Task>& tasks
     // Save TimeBlocks
     std::ofstream out_blocks(TIME_BLOCKS_FILE);
     if (!out_blocks) {
-        std::cerr << "  Помилка: не вдалося відкрити " << TIME_BLOCKS_FILE << " для запису.\n";
+        std::cerr << "  Error: could not open " << TIME_BLOCKS_FILE << " for writing.\n";
         ok = false;
     } else {
         out_blocks << TIME_BLOCKS_HEADER;
@@ -181,7 +181,7 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
                     next_task_id = t.id + 1;
                 }
             } else {
-                std::cerr << "  Попередження: помилка при читанні рядка Task.\n";
+                std::cerr << "  Warning: error reading Task line.\n";
             }
         }
     }
@@ -199,7 +199,7 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
             if (parse_time_block_tsv(split_tsv(line), tb)) {
                 tbs.push_back(std::move(tb));
             } else {
-                std::cerr << "  Попередження: помилка при читанні рядка TimeBlock.\n";
+                std::cerr << "  Warning: error reading TimeBlock line.\n";
             }
         }
     }
@@ -210,7 +210,7 @@ bool load_data(std::vector<TimeBlock>& tbs, std::vector<Task>& tasks, uint64_t& 
 void append_completed_task(const Task& t) {
     std::ofstream out(COMPLETED_TASKS_FILE, std::ios::app);
     if (!out) {
-        std::cerr << "  Помилка: не вдалося відкрити " << COMPLETED_TASKS_FILE << " для запису.\n";
+        std::cerr << "  Error: could not open " << COMPLETED_TASKS_FILE << " for writing.\n";
         return;
     }
     
